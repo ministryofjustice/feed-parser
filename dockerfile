@@ -21,7 +21,7 @@ RUN mkdir /output
 RUN chmod -R 777 /output
 
 # Copy the conversion script
-COPY convert.php /convert.php
+COPY run.php /run.php
 
 # Create a new user named "appuser" with UID/GID 1000
 RUN useradd -m -u 1000 -U appuser
