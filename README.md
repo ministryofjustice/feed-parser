@@ -7,5 +7,5 @@
  |_|  \___|\___|\__,_| |_|   \__,_|_|  |___/\___|_|   
 
 ```                                                     
-# feed-parser
+# Feed Parser
 Micro service that takes internal/external feeds and compiles them into xml and json formats
