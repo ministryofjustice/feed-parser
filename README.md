@@ -7,8 +7,8 @@
  |_|  \___|\___|\__,_| |_|   \__,_|_|  |___/\___|_|   
 
 ```                                                     
-# Feed Parser
-Microservice that takes internal/external feeds and compiles them into xml and json formats.
+# FeedParser
+Microservice that takes the external Oleeo feed, cleans the XML data to our specifications, converts that to json and then uploads it to our namespace's assosiated s3 bucket.
 
 # Deployment
 
