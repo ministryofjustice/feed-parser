@@ -7,6 +7,8 @@
  |_|  \___|\___|\__,_| |_|   \__,_|_|  |___/\___|_|   
 
 ```                                                     
+[![Feed Parser Deployment](https://github.com/ministryofjustice/feed-parser/actions/workflows/cd.yaml/badge.svg)](https://github.com/ministryofjustice/feed-parser/actions/workflows/cd.yaml)
+
 # FeedParser
 Microservice that takes the external Oleeo feed, cleans the XML data to our specifications, converts that to json and then uploads it to our namespace's associated s3 bucket.
 
