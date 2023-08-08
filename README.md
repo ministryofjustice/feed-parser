@@ -8,4 +8,8 @@
 
 ```                                                     
 # Feed Parser
-Micro service that takes internal/external feeds and compiles them into xml and json formats
+Microservice that takes internal/external feeds and compiles them into xml and json formats.
+
+# Deployment
+
+Merging or pushing to the `main` branch triggers a GitAction to push this FeedParser image to our `Hale Platform` dev namespace. It has it's own ECR repository there called `jotw-content-devs/hale-platform-dev-feed-parser-ecr`.
