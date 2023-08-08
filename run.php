@@ -11,7 +11,7 @@ use Aws\Exception\AwsException;
 // Function to convert XML to JSON
 function xmlToJson($xmlString)
 {
-    $xml = simplexml_load_string($xmlString);
+    $xml = simplexml_load_file($xmlString);
     $json = json_encode($xml);
     return $json;
 }
