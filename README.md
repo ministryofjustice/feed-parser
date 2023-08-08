@@ -8,7 +8,7 @@
 
 ```                                                     
 # FeedParser
-Microservice that takes the external Oleeo feed, cleans the XML data to our specifications, converts that to json and then uploads it to our namespace's assosiated s3 bucket.
+Microservice that takes the external Oleeo feed, cleans the XML data to our specifications, converts that to json and then uploads it to our namespace's associated s3 bucket.
 
 # Deployment
 
