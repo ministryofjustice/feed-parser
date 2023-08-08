@@ -33,4 +33,4 @@ RUN chown -R appuser:appuser /home/appuser
 USER 1000
 
 # Run the conversion script when the container starts
-CMD ["/usr/local/bin/php", "/convert.php"]
+CMD ["/usr/local/bin/php", "/run.php"]
