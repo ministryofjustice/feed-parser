@@ -2,7 +2,7 @@ name: Resuable Workflow - Build and push image
 
 on:
   workflow_call:
-    secrets:     
+    secrets:
       ecr-role:
         required: true
       ecr-region:
@@ -12,7 +12,7 @@ on:
 
 jobs:
   buildImage:
-      name: Build and push ECR image
+      name: Build and push image
       runs-on: ubuntu-latest
       permissions:
         id-token: write # This is required for requesting the JWT
@@ -39,4 +39,4 @@ jobs:
             docker push $REGISTRY/$REPOSITORY:feedparser
           env:
             REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-            REPOSITORY: ${{ secrets.ecr-repo }} 
+            REPOSITORY: ${{ secrets.ecr-repo }}

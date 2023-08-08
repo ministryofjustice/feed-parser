@@ -7,9 +7,9 @@ on:
       - 'main'
 
 jobs:
-          
+
   deployDemo:
-      name: Deploy image to Demo ECR repo
+      name: Demo deploy to ECR
       uses: ./.github/workflows/rw-build-image.yaml
       secrets:
         ecr-role: ${{ secrets.DEMO_ECR_ROLE_TO_ASSUME }}
@@ -17,7 +17,7 @@ jobs:
         ecr-repo: ${{ vars.DEMO_ECR_REPOSITORY }}
 
   deployDev:
-      name: Deploy image to Dev ECR repo
+      name: Dev deploy to ECR
       uses: ./.github/workflows/rw-build-image.yaml
       secrets:
         ecr-role: ${{ secrets.DEV_ECR_ROLE_TO_ASSUME }}
@@ -25,7 +25,7 @@ jobs:
         ecr-repo: ${{ vars.DEV_ECR_REPOSITORY }}
 
   deployStaging:
-      name: Deploy image to Staging ECR repo
+      name: Staging deploy to ECR
       uses: ./.github/workflows/rw-build-image.yaml
       secrets:
         ecr-role: ${{ secrets.STAGING_ECR_ROLE_TO_ASSUME }}
@@ -33,7 +33,7 @@ jobs:
         ecr-repo: ${{ vars.STAGING_ECR_REPOSITORY }}
 
   # deployProd:
-  #     name: Deploy image to Prod ECR repo
+  #     name: Prod deploy to ECR
   #     uses: ./.github/workflows/rw-build-image.yaml
   #     secrets:
   #       ecr-role: ${{ secrets.PROD_ECR_ROLE_TO_ASSUME }}
