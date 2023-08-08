@@ -1,0 +1,17 @@
+name: Feed Parser Deployment
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - 'main'
+
+jobs:
+          
+  deployDev:
+      name: Deploy image to ECR
+      uses: ./.github/workflows/rw-build-image.yaml
+      secrets:
+        ecr-role: ${{ secrets.DEV_ECR_ROLE_TO_ASSUME }}
+        ecr-region: ${{ vars.DEV_ECR_REGION }}
+        ecr-repo: ${{ vars.DEV_ECR_REPOSITORY }}

@@ -1,0 +1,46 @@
+name: Resuable Workflow - Build and push image
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        required: true
+        type: string
+    secrets:     
+      ecr-role:
+        required: true
+      ecr-region:
+        required: true
+      ecr-repo:
+        required: true
+
+jobs:
+  buildImage:
+      name: Build and push ECR image
+      runs-on: ubuntu-latest
+      permissions:
+        id-token: write # This is required for requesting the JWT
+        contents: read  # This is required for actions/checkout
+      steps:
+        # Checkout GitHub repository
+        - name: Checkout
+          uses: actions/checkout@v3
+
+        # Assume role in Cloud Platform
+        - name: Config Credentials
+          uses: aws-actions/configure-aws-credentials@v2
+          with:
+            role-to-assume: ${{ secrets.ecr-role }}
+            aws-region: ${{ secrets.ecr-region }}
+
+        # Login to container repository
+        - name: Login to ECR
+          uses: aws-actions/amazon-ecr-login@v1
+          id: login-ecr
+        - name: Build and Push FeedParser
+          run: |
+            docker build --pull --no-cache --tag $REGISTRY/$REPOSITORY:feedparser --file dockerfile .
+            docker push $REGISTRY/$REPOSITORY:feedparser
+          env:
+            REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+            REPOSITORY: ${{ secrets.ecr-repo }} 
