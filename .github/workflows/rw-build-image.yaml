@@ -2,10 +2,6 @@ name: Resuable Workflow - Build and push image
 
 on:
   workflow_call:
-    inputs:
-      environment:
-        required: true
-        type: string
     secrets:     
       ecr-role:
         required: true
