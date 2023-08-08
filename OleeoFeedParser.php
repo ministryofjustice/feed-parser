@@ -2,69 +2,100 @@
 
 class OleeoFeedParser {
 
-    //Converts XML File to JSON FIle
-    
-    public function parseToJSON(string $sourceFile, string $outputFile, array $optionalFields = [], $feedType = 'structured'){
-        if(file_exists($sourceFile)){
-            $xmlContent = simplexml_load_file($sourceFile);
+    /** 
+    * Converts XML File to JSON FIle
+    * @param string $sourceFile Source XML File to be parsed
+    * @param string $outputFile JSON File that will be created
+    * @param array $optionalFields 
+    * @param string $feedType
+    * @return array $parseResult 
+    **/
+    public function parseToJSON(string $sourceFile, string $outputFile, array $optionalFields = [], $feedType = 'complex'){
 
-            if ($xmlContent != false) {
-                $totalJobs = count($xmlContent->entry);
+        $parseResult = ['success' => false, 'errors' => [] ];
 
-                if ($totalJobs > 0){
-                    
-                    $jobs = [];
+        if(!file_exists($sourceFile)){
+            $parseResult['errors'][] = "Error Parsing [sourceFile: $sourceFile] - source file does not exist";
+            return $parseResult;
+        }
+            
+        $xmlContent = simplexml_load_file($sourceFile);
 
-                    for ($x = 0; $x < $totalJobs; $x++) {
-                        
-                        if($feedType == 'simple'){
-                            $jobs[] = $this->validateJobDetails2($xmlContent->entry[$x], $optionalFields);
-                        }
-                        else {
-                            $jobs[] = $this->validateJobDetails($xmlContent->entry[$x], $optionalFields);
-                        }                     
-                        
-                    }
+        if (!$xmlContent) {
+            $parseResult['errors'][] = "Error Parsing [sourceFile: $sourceFile] - source file could not be loaded. Please check this file is valid XML";
+            return $parseResult;
+        }
 
-                    $outputArray = [
-                        'objectType' => "job",
-                        'objects' => $jobs
-                    ];
-                    
-                    $outputJSON = json_encode($outputArray);
-                    
-                    file_put_contents($outputFile, $outputJSON);
+        $jobs = [];
+        $totalJobs = count($xmlContent->entry);
+
+        if ($totalJobs > 0){
+
+            for ($x = 0; $x < $totalJobs; $x++) {
+                
+                $newJob = $this->validateJobDetails($xmlContent->entry[$x], $optionalFields, $feedType);
+
+                if($newJob != false){
+                    $jobs[] = $newJob;
                 }
-                else {
-                    //ERROR - No jobs found?? - Question
-                }
+                            
             }
-            else {
-                //ERROR - loading xml file
-            }
+        }
+
+        $outputArray = [
+            'objectType' => "job",
+            'objects' => $jobs
+        ];
+        
+        $outputJSON = json_encode($outputArray);
+
+        if(!$outputJSON){
+            $parseResult['errors'][] = "Error Parsing Feed [sourceFile: $sourceFile] - Error encoding feed data";
+        }
+        
+        $writeFileResult = file_put_contents($outputFile, $outputJSON);
+
+        if($writeFileResult === false){
+            $parseResult['errors'][] = "Error Parsing Feed [sourceFile: $sourceFile] - Output file failed to write [outputFile: $outputFile]";
         }
         else {
-            //ERROR - source file not found
+            $parseResult['success'] = true;
         }
+
+        return $parseResult;
+        
     }
 
-     //Structured Feed
-    function validateJobDetails($jobXML, array $optionalFields = []){
+    function validateJobDetails($jobXML, array $optionalFields = [], $feedType = 'complex'){
         $job = [];
-        $jobTitle = (string) $jobXML->title; //Question - what if no title found
-        $jobURL = (string) $jobXML->id; //Question - what if no url found
+        $jobTitle = (string) $jobXML->title; 
+        $jobURL = (string) $jobXML->id; 
         $jobContent = $jobXML->content;
 
         $job['title'] = $jobTitle; //Question - do we want to strip the ID?
         $job['url'] = $jobURL;
+        
+        // Job title and Job URL are required
+        if (empty($jobTitle) || empty($jobURL)){
+            return false;
+        }
 
-        $job = $this->validateOptionalFields($job, $jobContent, $optionalFields);
+        if ($feedType == 'simple'){
+            $job = $this->validateOptionalFieldsbyNewLine($job, $jobContent, $optionalFields);
+        }
+        else {
+            $job = $this->validateOptionalFieldsbySpan($job, $jobContent, $optionalFields);
+        }
+
+        //Strip Vacancy ID from title
+        if(array_key_exists('id', $job) && !empty($job['id'])){
+            $job['title'] = trim(str_replace($job['id'] . ' -', '' , $job['title']));
+        }
 
         return $job;
     }
-
-    //Structured Feed
-    function validateOptionalFields($job, $jobContent, array $optionalFields = []){
+   
+    function validateOptionalFieldsbySpan($job, $jobContent, array $optionalFields = []){
         //Question - what happens if fields not there - in feed but blank or not there.
 
         if(in_array('salaryRange', $optionalFields)){
@@ -190,70 +221,8 @@ class OleeoFeedParser {
         return $job;
     }
 
-    function validateSalary($salary){
-
-        $salary_validated = [];
-        $salary = str_replace("-", " ", $salary); // replace dash with space
-        $salary_range_array = explode(' ', $salary); //split by space, thereby catching all text but no numbers (assuming numbers don't have internal spaces)
-        $salary_range_array = str_replace(".00", "", $salary_range_array); //strip occasional use of .00 (e.g. £34,500.00)
-        $salary_range_array = preg_replace("/[^0-9]/", "", $salary_range_array); //strip all non-numerics
+    function validateOptionalFieldsbyNewLine($job, $jobContent, array $optionalFields = []){
     
-        $array_length = count($salary_range_array);
-    
-        for ($i=0; $i<=$array_length;$i++) { //loop through array removing elements less than 5 characters long
-            if (isset($salary_range_array[$i]) && strlen($salary_range_array[$i])<5) unset($salary_range_array[$i]);
-        }
-    
-        $salary_min = $salary_max = '';
-        if (count($salary_range_array)) {
-            $salary_min = min($salary_range_array);
-            $salary_max = max($salary_range_array);
-        }
-    
-        if ($salary_max == $salary_min) $salary_max = "";
-    
-        if (is_numeric($salary_min)) {
-            $salary_validated['min'] = intval($salary_min);
-        }
-        if (is_numeric($salary_max)) {
-            $salary_validated['max'] = intval($salary_max);
-        }
-
-        //London Waiting
-        if (preg_match("/( .* London .* allowance of \£.*)/i", $salary)) { //London weighting string identified
-            $london_weighting_allowance = preg_replace("/London .* allowance of \£/i","|||",$salary); //replace the regex string with a constant for splitting
-            $london_weighting_allowance = explode("|||", $london_weighting_allowance)[1]; //split by start of the agreed term - take second element
-            $london_weighting_allowance = explode(")", $london_weighting_allowance)[0]; //split by end of the agreed term - take first element
-            $london_weighting_allowance = str_replace(".00", "", $london_weighting_allowance); //strip occasional use of .00 (e.g. £3,889.00)
-            $london_weighting_allowance = preg_replace("/[^0-9]/", "", $london_weighting_allowance); //strip all non-numerics
-
-            if (isset($london_weighting_allowance) && is_numeric($london_weighting_allowance)) {
-                $salary_validated['london'] = intval($london_weighting_allowance);
-            }
-        }
-    
-        return $salary_validated;
-    }
-
-    //Simple feed
-    function validateJobDetails2($jobXML, array $optionalFields = []){
-        $job = [];
-        $jobTitle = trim((string) $jobXML->title); 
-        $jobURL = (string)$jobXML->id; 
-        $jobContent = $jobXML->content;
-
-        $job['title'] = $jobTitle; 
-        $job['url'] = $jobURL;
-
-        $job = $this->validateOptionalFields2($job, $jobContent, $optionalFields);
-
-        return $job;
-
-    }
-
-    //Simple Feed
-    function validateOptionalFields2($job, $jobContent, array $optionalFields = []){
-        
         if(in_array('cities', $optionalFields)){
             $job['cities'] = [];
         }
@@ -319,7 +288,51 @@ class OleeoFeedParser {
         }
 
         return $job;
-       
+        
     }
 
+    function validateSalary($salary){
+
+        $salary_validated = [];
+        $salary = str_replace("-", " ", $salary); // replace dash with space
+        $salary_range_array = explode(' ', $salary); //split by space, thereby catching all text but no numbers (assuming numbers don't have internal spaces)
+        $salary_range_array = str_replace(".00", "", $salary_range_array); //strip occasional use of .00 (e.g. £34,500.00)
+        $salary_range_array = preg_replace("/[^0-9]/", "", $salary_range_array); //strip all non-numerics
+    
+        $array_length = count($salary_range_array);
+    
+        for ($i=0; $i<=$array_length;$i++) { //loop through array removing elements less than 5 characters long
+            if (isset($salary_range_array[$i]) && strlen($salary_range_array[$i])<5) unset($salary_range_array[$i]);
+        }
+    
+        $salary_min = $salary_max = '';
+        if (count($salary_range_array)) {
+            $salary_min = min($salary_range_array);
+            $salary_max = max($salary_range_array);
+        }
+    
+        if ($salary_max == $salary_min) $salary_max = "";
+    
+        if (is_numeric($salary_min)) {
+            $salary_validated['min'] = intval($salary_min);
+        }
+        if (is_numeric($salary_max)) {
+            $salary_validated['max'] = intval($salary_max);
+        }
+
+        //London Waiting
+        if (preg_match("/( .* London .* allowance of \£.*)/i", $salary)) { //London weighting string identified
+            $london_weighting_allowance = preg_replace("/London .* allowance of \£/i","|||",$salary); //replace the regex string with a constant for splitting
+            $london_weighting_allowance = explode("|||", $london_weighting_allowance)[1]; //split by start of the agreed term - take second element
+            $london_weighting_allowance = explode(")", $london_weighting_allowance)[0]; //split by end of the agreed term - take first element
+            $london_weighting_allowance = str_replace(".00", "", $london_weighting_allowance); //strip occasional use of .00 (e.g. £3,889.00)
+            $london_weighting_allowance = preg_replace("/[^0-9]/", "", $london_weighting_allowance); //strip all non-numerics
+
+            if (isset($london_weighting_allowance) && is_numeric($london_weighting_allowance)) {
+                $salary_validated['london'] = intval($london_weighting_allowance);
+            }
+        }
+    
+        return $salary_validated;
+    }
 }
