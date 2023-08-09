@@ -32,10 +32,10 @@ jobs:
         ecr-region: ${{ vars.STAGING_ECR_REGION }}
         ecr-repo: ${{ vars.STAGING_ECR_REPOSITORY }}
 
-  # deployProd:
-  #     name: Prod deploy to ECR
-  #     uses: ./.github/workflows/rw-build-image.yaml
-  #     secrets:
-  #       ecr-role: ${{ secrets.PROD_ECR_ROLE_TO_ASSUME }}
-  #       ecr-region: ${{ vars.PROD_ECR_REGION }}
-  #       ecr-repo: ${{ vars.PROD_ECR_REPOSITORY }}
+  deployProd:
+      name: Prod deploy to ECR
+      uses: ./.github/workflows/rw-build-image.yaml
+      secrets:
+        ecr-role: ${{ secrets.PROD_ECR_ROLE_TO_ASSUME }}
+        ecr-region: ${{ vars.PROD_ECR_REGION }}
+        ecr-repo: ${{ vars.PROD_ECR_REPOSITORY }}
