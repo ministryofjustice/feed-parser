@@ -47,7 +47,7 @@ $s3Client = new S3Client([
     $feedID = $feed['id'];
     $feedURL = $feed['url'];
     $xmlName = "$feedID.xml";
-    $xmlLocation = "/output/$feedName";
+    $xmlLocation = "/output/$xmlName";
 
     // Fetch the XML feed using wget
     exec("wget -O  $xmlLocation $feedURL");
