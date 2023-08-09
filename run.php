@@ -49,7 +49,8 @@ try {
     $result = $s3Client->putObject([
         'Bucket' => $s3BucketName,
         'Key' => $s3ObjectKey,
-        'SourceFile' => '/output/structured-feed.json',
+        'ACL' => 'public-read',
+        'SourceFile' => '/output/structured-feed.json'
     ]);
 
     $uploadedFileName = basename('/output/structured-feed.json');
