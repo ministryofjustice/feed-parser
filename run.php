@@ -2,6 +2,7 @@
 
 // Import AWS SDK for PHP (autoload the AWS SDK classes)
 require 'vendor/autoload.php';
+require 'OleeoFeedParser.php';
 
 use Aws\S3\S3Client;
 use Aws\Exception\AwsException;
@@ -9,14 +10,29 @@ use Aws\Exception\AwsException;
 // Fetch the XML feed using wget
 exec('wget -O /output/input.xml https://justicejobs.tal.net/vx/mobile-0/appcentre-1/brand-2/candidate/jobboard/vacancy/3/feed/structured');
 
+$feed_parser = new OleeoFeedParser();
+
+$optionalFields = [
+    'id',
+    'closingDate',
+    'salary',
+    'addresses',
+    'cities',
+    'regions',
+    'roleTypes',
+    'contractTypes'
+];
+
+$feed_parser->parseToJSON('output/input.xml', 'output/structured-feed.json', $optionalFields);
+
 // AWS S3 Bucket Name
 $s3BucketName = getenv('S3_UPLOADS_BUCKET');
 
-// AWS S3 Bucket Path 
+// AWS S3 Bucket Path
 $s3BucketPath = '';  // Set to an empty string if the root of the bucket
 
 // AWS S3 Object Key
-$s3ObjectKey = $s3BucketPath . 'input.xml';
+$s3ObjectKey = $s3BucketPath . 'structured-feed.json';
 
 // AWS S3 Region
 $awsRegion = 'eu-west-2';
@@ -33,7 +49,7 @@ try {
     $result = $s3Client->putObject([
         'Bucket' => $s3BucketName,
         'Key' => $s3ObjectKey,
-        'SourceFile' => '/output/input.xml',
+        'SourceFile' => '/output/structured-feed.json',
     ]);
 
     echo 'File uploaded to S3 successfully.' . PHP_EOL;
