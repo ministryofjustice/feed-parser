@@ -2,7 +2,7 @@
 
 // Import AWS SDK for PHP (autoload the AWS SDK classes)
 require 'vendor/autoload.php';
-require 'OleeoFeedParser.php';
+require 'inc/OleeoFeedParser.php';
 
 use Aws\S3\S3Client;
 use Aws\Exception\AwsException;

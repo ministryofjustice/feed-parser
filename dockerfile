@@ -20,6 +20,8 @@ RUN mkdir /output
 # Set read and write permissions for the /output directory and its contents
 RUN chmod -R 777 /output
 
+COPY inc/ /inc/
+
 # Copy the conversion script
 COPY run.php /run.php
 
