@@ -42,7 +42,7 @@ $s3Client = new S3Client([
 ]);
 
 
- foreach ($feed as $feed){
+ foreach ($feeds as $feed){
 
     $feedID = $feed['id'];
     $feedURL = $feed['url'];
