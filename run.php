@@ -52,7 +52,8 @@ try {
         'SourceFile' => '/output/structured-feed.json',
     ]);
 
-    echo 'File uploaded to S3 successfully.' . PHP_EOL;
+    $uploadedFileName = basename('/output/structured-feed.json');
+    echo "File '$uploadedFileName' uploaded to S3 successfully." . PHP_EOL;
 } catch (AwsException $e) {
     echo 'Error: ' . $e->getMessage() . PHP_EOL;
 }
