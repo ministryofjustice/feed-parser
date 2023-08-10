@@ -6,6 +6,7 @@ require 'inc/OleeoFeedParser.php';
 
 use Aws\S3\S3Client;
 use Aws\Exception\AwsException;
+
 echo 'Feed Parser Started';
 
 $feeds = [
@@ -23,9 +24,9 @@ $feeds = [
     ]
  ];
 
- if(count($feeds) == 0){
+if (count($feeds) == 0) {
     return;
- }
+}
 
 $availableFeeds = [];
 
@@ -45,8 +46,7 @@ $s3Client = new S3Client([
 ]);
 
 
- foreach ($feeds as $feed){
-
+foreach ($feeds as $feed) {
     $feedID = $feed['id'];
     $feedURL = $feed['url'];
     $xmlName = "$feedID.xml";
@@ -58,14 +58,14 @@ $s3Client = new S3Client([
     $feed_parser = new OleeoFeedParser();
 
     $optionalFields = [
-        'id',
-        'closingDate',
-        'salary',
-        'addresses',
-        'cities',
-        'regions',
-        'roleTypes',
-        'contractTypes'
+       'id',
+       'closingDate',
+       'salary',
+       'addresses',
+       'cities',
+       'regions',
+       'roleTypes',
+       'contractTypes'
     ];
 
 
@@ -73,7 +73,7 @@ $s3Client = new S3Client([
 
     $result = $feed_parser->parseToJSON("output/$xmlName", $jsonFile, $optionalFields, $feed['type']);
 
-    if(!$result['success']){
+    if (!$result['success']) {
         return;
     }
 
@@ -93,54 +93,56 @@ $s3Client = new S3Client([
         $uploadedFileName = basename('/' . $jsonFile);
         echo "File '$uploadedFileName' uploaded to S3 successfully." . PHP_EOL;
 
-        if(array_key_exists('ObjectURL', $result)){
-            $availableFeeds[] = [
-                'name' => $feed['name'],
-                'url' => $result['ObjectURL']
-            ];
-        }
-
-
+#        if(array_key_exists('ObjectURL', $result)){
+#            $availableFeeds[] = [
+#                'name' => $feed['name'],
+#                'url' => $result['ObjectURL']
+#            ];
+#        }
     } catch (AwsException $e) {
         echo 'Error: ' . $e->getMessage() . PHP_EOL;
     }
- }
+}
+
+return;
+
+
 
 //Create Available Feeds JSON File
 
 $feedsJSON = json_encode($availableFeeds);
 
-if(!$feedsJSON){
+if (!$feedsJSON) {
     return;
 }
 
 $writeFileResult = file_put_contents("output/feeds.json", $feedsJSON);
 
-if ($writeFileResult === false){
+if ($writeFileResult === false) {
     return;
 }
 
-$result = uploadFiletoS3($s3Client,  $s3BucketName, $s3BucketPath . "feeds.json", "output/feeds.json");
+$result = uploadFiletoS3($s3Client, $s3BucketName, $s3BucketPath . "feeds.json", "output/feeds.json");
 
-function uploadFiletoS3($s3Client,  $s3BucketName, $s3ObjectKey, $sourceFile){
+function uploadFiletoS3($s3Client, $s3BucketName, $s3ObjectKey, $sourceFile)
+{
 
     $uploadResult = false;
 
      // Upload to AWS s3 bucket
-     try {
+    try {
         // Upload the file to S3 bucket
         $result = $s3Client->putObject([
-            'Bucket' => $s3BucketName,
-            'Key' => $s3ObjectKey,
-            'ACL' => 'public-read',
-            'SourceFile' => '/' . $sourceFile
+           'Bucket' => $s3BucketName,
+           'Key' => $s3ObjectKey,
+           'ACL' => 'public-read',
+           'SourceFile' => '/' . $sourceFile
         ]);
 
         $uploadResult = true;
 
         $uploadedFileName = basename('/' . $sourceFile);
         echo "File '$uploadedFileName' uploaded to S3 successfully." . PHP_EOL;
-
     } catch (AwsException $e) {
         echo 'Error: ' . $e->getMessage() . PHP_EOL;
     }
