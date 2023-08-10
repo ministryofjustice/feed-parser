@@ -99,17 +99,13 @@ foreach ($feeds as $feed) {
         echo 'Error: ' . $e->getMessage() . PHP_EOL;
     }
 
-    if(array_key_exists('ObjectURL', $result)){
+    if(!empty($result) && array_key_exists('effectiveUri', $result['@metadata'])){
         $availableFeeds[] = [
             'name' => $feed['name'],
-            'url' => $result['ObjectURL']
+            'url' => $result['@metadata']['effectiveUri']
         ];
     }
 }
-
-return;
-
-
 
 //Create Available Feeds JSON File
 
