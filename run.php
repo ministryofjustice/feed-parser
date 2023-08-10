@@ -80,6 +80,8 @@ foreach ($feeds as $feed) {
     // AWS S3 Object Key
     $s3ObjectKey = $s3BucketPath . "$feedID.json";
 
+    $result = [];
+
     // Upload to AWS s3 bucket
     try {
         // Upload the file to S3 bucket
@@ -93,14 +95,15 @@ foreach ($feeds as $feed) {
         $uploadedFileName = basename('/' . $jsonFile);
         echo "File '$uploadedFileName' uploaded to S3 successfully." . PHP_EOL;
 
-#        if(array_key_exists('ObjectURL', $result)){
-#            $availableFeeds[] = [
-#                'name' => $feed['name'],
-#                'url' => $result['ObjectURL']
-#            ];
-#        }
     } catch (AwsException $e) {
         echo 'Error: ' . $e->getMessage() . PHP_EOL;
+    }
+
+    if(array_key_exists('ObjectURL', $result)){
+        $availableFeeds[] = [
+            'name' => $feed['name'],
+            'url' => $result['ObjectURL']
+        ];
     }
 }
 
