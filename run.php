@@ -26,11 +26,13 @@ $feeds = [
     return;
  }
 
+$availableFeeds = [];
+
  // AWS S3 Bucket Name
 $s3BucketName = getenv('S3_UPLOADS_BUCKET');
 
 // AWS S3 Bucket Path
-$s3BucketPath = '';  // Set to an empty string if the root of the bucket
+$s3BucketPath = 'feed-parser/';  // Set to an empty string if the root of the bucket
 
 // AWS S3 Region
 $awsRegion = 'eu-west-2';
@@ -89,10 +91,58 @@ $s3Client = new S3Client([
 
         $uploadedFileName = basename('/' . $jsonFile);
         echo "File '$uploadedFileName' uploaded to S3 successfully." . PHP_EOL;
+
+        if(array_key_exists('ObjectURL', $result)){
+            $availableFeeds[] = [
+                'name' => $feed['name'],
+                'url' => $result['ObjectURL']
+            ];
+        }
+
+
     } catch (AwsException $e) {
         echo 'Error: ' . $e->getMessage() . PHP_EOL;
     }
  }
 
+//Create Available Feeds JSON File
 
+$feedsJSON = json_encode($availableFeeds);
 
+if(!$feedsJSON){
+    return;
+}
+
+$writeFileResult = file_put_contents("output/feeds.json", $feedsJSON);
+
+if ($writeFileResult === false){
+    return;
+}
+
+$result = uploadFiletoS3($s3Client,  $s3BucketName, $s3BucketPath . "feeds.json", "output/feeds.json");
+
+function uploadFiletoS3($s3Client,  $s3BucketName, $s3ObjectKey, $sourceFile){
+
+    $uploadResult = false;
+
+     // Upload to AWS s3 bucket
+     try {
+        // Upload the file to S3 bucket
+        $result = $s3Client->putObject([
+            'Bucket' => $s3BucketName,
+            'Key' => $s3ObjectKey,
+            'ACL' => 'public-read',
+            'SourceFile' => '/' . $sourceFile
+        ]);
+
+        $uploadResult = true;
+
+        $uploadedFileName = basename('/' . $sourceFile);
+        echo "File '$uploadedFileName' uploaded to S3 successfully." . PHP_EOL;
+
+    } catch (AwsException $e) {
+        echo 'Error: ' . $e->getMessage() . PHP_EOL;
+    }
+
+    return $uploadResult;
+}
