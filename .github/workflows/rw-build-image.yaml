@@ -33,6 +33,8 @@ jobs:
         - name: Login to ECR
           uses: aws-actions/amazon-ecr-login@v1
           id: login-ecr
+          with:
+            mask-password: true
         - name: Build and Push FeedParser
           run: |
             docker build --pull --no-cache --tag $REGISTRY/$REPOSITORY:feedparser --file dockerfile .
