@@ -36,6 +36,9 @@ class OleeoFeedParser {
                 $newJob = $this->validateJobDetails($xmlContent->entry[$x], $optionalFields, $feedType);
 
                 if($newJob != false){
+
+                    $job_hash = md5(json_encode($newJob));
+                    $newJob['hash'] = $job_hash;
                     $jobs[] = $newJob;
                 }
                             
