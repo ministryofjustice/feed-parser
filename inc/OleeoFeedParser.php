@@ -36,7 +36,6 @@ class OleeoFeedParser {
                 $newJob = $this->validateJobDetails($xmlContent->entry[$x], $optionalFields, $feedType);
 
                 if($newJob != false){
-
                     $job_hash = md5(json_encode($newJob));
                     $newJob['hash'] = $job_hash;
                     $jobs[] = $newJob;
@@ -75,7 +74,7 @@ class OleeoFeedParser {
         $jobURL = (string) $jobXML->id; 
         $jobContent = $jobXML->content;
 
-        $job['title'] = $jobTitle; //Question - do we want to strip the ID?
+        $job['title'] = trim($jobTitle);
         $job['url'] = $jobURL;
         
         // Job title and Job URL are required
@@ -92,7 +91,16 @@ class OleeoFeedParser {
 
         //Strip Vacancy ID from title
         if(array_key_exists('id', $job) && !empty($job['id'])){
-            $job['title'] = trim(str_replace($job['id'] . ' -', '' , $job['title']));
+
+            //encoding html entities as preg_repalce was failing with special characters e.g. right single quote
+            //decoding first because some titles have decoded html already e.g. &amp;
+            $newTitle = preg_replace("/^" . $job['id'] . "\s*[-]/", "", htmlentities(html_entity_decode($job['title'])));
+            $newTitle = preg_replace("/^" . $job['id'] . "\s*&ndash;/", "", $newTitle);
+        
+
+            if(!empty($newTitle)){
+               $job['title'] = html_entity_decode(trim($newTitle));
+            }
         }
 
         return $job;
@@ -138,6 +146,18 @@ class OleeoFeedParser {
                 }
             }
 
+            if(in_array('availablePositions', $optionalFields)){
+                if ($currentSpan->attributes()->itemprop[0] == "Number of positions available") {
+                    $job['availablePositions'] = (string) $currentSpan;
+                }
+            }
+
+            if(in_array('organisation', $optionalFields)){
+                if ($currentSpan->attributes()->itemprop[0] == "Organisation") {
+                    $job['organisation'] = trim(str_replace('AGY -', '', (string) $currentSpan));
+                }
+            }
+
             if(in_array('closingDate', $optionalFields)){
                 if ($currentSpan->attributes()->itemprop[0] == "Closing Date") {
                     //convert date to timestamp
@@ -151,15 +171,15 @@ class OleeoFeedParser {
                     $salary_validated = $this->validateSalary((string) $currentSpan);
         
                     if (array_key_exists('min', $salary_validated)) {
-                        $job['salaryMin'] = $salary_validated['min'];
+                        $job['salaryMin'] = (string) $salary_validated['min'];
                     }
         
                     if (array_key_exists('max', $salary_validated)) {
-                        $job['salaryMax'] = $salary_validated['max'];
+                        $job['salaryMax'] = (string) $salary_validated['max'];
                     }
 
                     if (array_key_exists('london', $salary_validated)) {
-                        $job['salaryLondon'] = $salary_validated['london'];
+                        $job['salaryLondon'] = (string) $salary_validated['london'];
                     }
                 }
             }
@@ -297,6 +317,16 @@ class OleeoFeedParser {
     function validateSalary($salary){
 
         $salary_validated = [];
+
+        if($salary == "Unpaid"){
+            $salary_validated = [
+                'min' => 'Unpaid',
+                'max' => 'Unpaid',
+            ];
+
+            return $salary_validated;
+        }
+
         $salary = str_replace("-", " ", $salary); // replace dash with space
         $salary_range_array = explode(' ', $salary); //split by space, thereby catching all text but no numbers (assuming numbers don't have internal spaces)
         $salary_range_array = str_replace(".00", "", $salary_range_array); //strip occasional use of .00 (e.g. £34,500.00)
@@ -319,6 +349,7 @@ class OleeoFeedParser {
         if (is_numeric($salary_min)) {
             $salary_validated['min'] = intval($salary_min);
         }
+
         if (is_numeric($salary_max)) {
             $salary_validated['max'] = intval($salary_max);
         }
