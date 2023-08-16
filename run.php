@@ -61,6 +61,8 @@ foreach ($feeds as $feed) {
        'id',
        'closingDate',
        'salary',
+       'availablePositions',
+       'organisation',
        'addresses',
        'cities',
        'regions',
