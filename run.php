@@ -21,7 +21,24 @@ $feeds = [
         'name' => 'MOJ Oleeo Jobs Simple Feed',
         'url' => 'https://justicejobs.tal.net/vx/mobile-0/appcentre-1/brand-2/candidate/jobboard/vacancy/3/feed',
         'type' => 'simple'
-    ]
+    ],
+    [
+        'id' => 'hmpps-filtered-oleeo',
+        'name' => 'HMPPS Filtered Oleeo Jobs Structured Feed',
+        'url' => 'https://justicejobs.tal.net/vx/mobile-0/appcentre-1/brand-2/candidate/jobboard/vacancy/3/feed/structured',
+        'type' => 'complex',
+        'filters' => [
+            [
+                'fieldName' => 'organisation',
+                'acceptedValues' => [
+                    'HMPPS HQ',
+                    'HMPPS - National Probation Service',
+                    'HMPPS - Public Sector Prisons',
+                    'HMPPS - Youth Custody Estate'
+                ]
+            ]
+        ]
+    ],
  ];
 
 if (count($feeds) == 0) {
@@ -70,10 +87,15 @@ foreach ($feeds as $feed) {
        'contractTypes'
     ];
 
+    $filters = [];
+
+    if(array_key_exists('filters', $feed) && !empty($feed['filters'])){
+        $filters = $feed['filters'];
+    }
 
     $jsonFile = "output/$feedID.json";
 
-    $result = $feed_parser->parseToJSON("output/$xmlName", $jsonFile, $optionalFields, $feed['type']);
+    $result = $feed_parser->parseToJSON("output/$xmlName", $jsonFile, $optionalFields, $feed['type'], $filters);
 
     if (!$result['success']) {
         return;

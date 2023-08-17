@@ -2,6 +2,9 @@
 
 class OleeoFeedParser {
 
+    private $feedType = 'complex';
+    private $optionalFields = [];
+    private $filters = [];
     /** 
     * Converts XML File to JSON FIle
     * @param string $sourceFile Source XML File to be parsed
@@ -10,7 +13,11 @@ class OleeoFeedParser {
     * @param string $feedType
     * @return array $parseResult 
     **/
-    public function parseToJSON(string $sourceFile, string $outputFile, array $optionalFields = [], $feedType = 'complex'){
+    public function parseToJSON(string $sourceFile, string $outputFile, array $optionalFields = [], $feedType = 'complex', $filters = []){
+
+        $this->feedType = $feedType;
+        $this->optionalFields = $optionalFields;
+        $this->filters = $filters;
 
         $parseResult = ['success' => false, 'errors' => [] ];
 
@@ -33,9 +40,12 @@ class OleeoFeedParser {
 
             for ($x = 0; $x < $totalJobs; $x++) {
                 
-                $newJob = $this->validateJobDetails($xmlContent->entry[$x], $optionalFields, $feedType);
+                $newJob = $this->validateJobDetails($xmlContent->entry[$x]);
+
+                $newJob = $this->matchWithFilters($newJob);
 
                 if($newJob != false){
+
                     $job_hash = md5(json_encode($newJob));
                     $newJob['hash'] = $job_hash;
                     $jobs[] = $newJob;
@@ -68,7 +78,63 @@ class OleeoFeedParser {
         
     }
 
-    function validateJobDetails($jobXML, array $optionalFields = [], $feedType = 'complex'){
+    function matchWithFilters($job){
+
+        if(empty($this->filters)){
+            return $job;
+        }
+
+        foreach($this->filters as $filter){
+
+            //if fieldName and acceptedValues not set we cant validated filter - so skip filter
+            if(!array_key_exists('fieldName', $filter) || !array_key_exists('acceptedValues', $filter) || empty($filter['fieldName']) || empty($filter['acceptedValues'])){
+                continue;
+            }
+
+            $fieldName = $filter['fieldName'];
+
+            if(is_array($filter['acceptedValues'])){
+                $acceptedValues = $filter['acceptedValues'];
+            }
+            else {
+                $acceptedValues = [$filter['acceptedValues']];
+            }
+
+            //checks if current job has field and its not empty
+            if(!array_key_exists($fieldName, $job) || empty($job[$fieldName])){
+                return false;
+            }
+
+            $valueFound = false;
+
+            foreach($acceptedValues as $acceptedValue){
+
+                //decide if field is array fields e.g. cities or a string e.g. organisation
+                if(is_array($job[$fieldName])){
+                    if(in_array($acceptedValue, $job[$fieldName])){
+                        $valueFound = true;
+                        break;
+                    }
+                }
+                else {
+                    if($acceptedValue == $job[$fieldName]){
+                        $valueFound = true;
+                        break;
+                    }
+                }
+            }
+
+            //if value not found no need to check other filters
+            if(!$valueFound){
+                return false;
+            }
+        }
+
+        return $job;
+    }
+
+    function validateJobDetails($jobXML){
+        
         $job = [];
         $jobTitle = (string) $jobXML->title; 
         $jobURL = (string) $jobXML->id; 
@@ -82,11 +148,11 @@ class OleeoFeedParser {
             return false;
         }
 
-        if ($feedType == 'simple'){
-            $job = $this->validateOptionalFieldsbyNewLine($job, $jobContent, $optionalFields);
+        if ($this->feedType == 'simple'){
+            $job = $this->validateOptionalFieldsbyNewLine($job, $jobContent);
         }
         else {
-            $job = $this->validateOptionalFieldsbySpan($job, $jobContent, $optionalFields);
+            $job = $this->validateOptionalFieldsbySpan($job, $jobContent);
         }
 
         //Strip Vacancy ID from title
@@ -106,30 +172,30 @@ class OleeoFeedParser {
         return $job;
     }
    
-    function validateOptionalFieldsbySpan($job, $jobContent, array $optionalFields = []){
+    function validateOptionalFieldsbySpan($job, $jobContent){
         //Question - what happens if fields not there - in feed but blank or not there.
 
-        if(in_array('salaryRange', $optionalFields)){
+        if(in_array('salaryRange', $this->optionalFields)){
             $job['salaryRange'] = [];
         }
 
-        if(in_array('addresses', $optionalFields)){
+        if(in_array('addresses', $this->optionalFields)){
             $job['addresses'] = [];
         }
 
-        if(in_array('cities', $optionalFields)){
+        if(in_array('cities', $this->optionalFields)){
             $job['cities'] = [];
         }
 
-        if(in_array('regions', $optionalFields)){
+        if(in_array('regions', $this->optionalFields)){
             $job['regions'] = [];
         }
     
-        if(in_array('roleTypes', $optionalFields)){
+        if(in_array('roleTypes', $this->optionalFields)){
             $job['roleTypes'] = [];
         }
 
-        if(in_array('contractTypes', $optionalFields)){
+        if(in_array('contractTypes', $this->optionalFields)){
             $job['contractTypes'] = [];
         }
 
@@ -140,32 +206,32 @@ class OleeoFeedParser {
 
             $currentSpan = $jobContent->div->span[$y];
  
-            if(in_array('id', $optionalFields)){
+            if(in_array('id', $this->optionalFields)){
                 if ($currentSpan->attributes()->itemprop[0] == "Vacancy ID") {
                     $job['id'] = (string) $currentSpan;
                 }
             }
 
-            if(in_array('availablePositions', $optionalFields)){
+            if(in_array('availablePositions', $this->optionalFields)){
                 if ($currentSpan->attributes()->itemprop[0] == "Number of positions available") {
                     $job['availablePositions'] = (string) $currentSpan;
                 }
             }
 
-            if(in_array('organisation', $optionalFields)){
+            if(in_array('organisation', $this->optionalFields)){
                 if ($currentSpan->attributes()->itemprop[0] == "Organisation") {
                     $job['organisation'] = trim(str_replace('AGY -', '', (string) $currentSpan));
                 }
             }
 
-            if(in_array('closingDate', $optionalFields)){
+            if(in_array('closingDate', $this->optionalFields)){
                 if ($currentSpan->attributes()->itemprop[0] == "Closing Date") {
                     //convert date to timestamp
                     $job['closingDate'] = preg_replace("/[^0-9]/", "", strtotime((string) $currentSpan));
                 }
             }
 
-            if(in_array('salary', $optionalFields)){
+            if(in_array('salary', $this->optionalFields)){
                 if ($currentSpan->attributes()->itemprop[0] == "Salary Minimum") {
         
                     $salary_validated = $this->validateSalary((string) $currentSpan);
@@ -185,54 +251,54 @@ class OleeoFeedParser {
             }
 
             // Salary Range
-            if(in_array('salaryRange', $optionalFields)){
+            if(in_array('salaryRange', $this->optionalFields)){
                 if ($currentSpan->attributes()->itemprop[0] == "Salary Range") { 
                     array_push($job['salaryRange'], (string) $currentSpan);
                 }
             }
 
             // Building/Site - renamed to Addresses
-            if(in_array('addresses', $optionalFields)){
+            if(in_array('addresses', $this->optionalFields)){
                 if ($currentSpan->attributes()->itemprop[0] == "Building/Site") { //Question - some in caps some not?
                     array_push($job['addresses'], (string) $currentSpan);
                 }
             }
 
             //  Cities
-            if(in_array('cities', $optionalFields)){
+            if(in_array('cities', $this->optionalFields)){
                 if ($currentSpan->attributes()->itemprop[0] == "City/Town") {
                     array_push($job['cities'], trim((string) $currentSpan));
                 }
             }
                             
             //  Geographical Region(s)
-            if(in_array('regions', $optionalFields)){
+            if(in_array('regions', $this->optionalFields)){
                 if ($currentSpan->attributes()->itemprop[0] == "Geographical Region(s)") {
                     array_push($job['regions'], (string) $currentSpan);   
                 }
             }
 
             //  Role Type
-            if(in_array('roleTypes', $optionalFields)){
+            if(in_array('roleTypes', $this->optionalFields)){
                 if ($currentSpan->attributes()->itemprop[0] == "Role Type") {
                     array_push($job['roleTypes'], (string) $currentSpan);
                 }
             }
 
             //  Working Pattern - renamed to Contract Type
-            if(in_array('contractTypes', $optionalFields)){
+            if(in_array('contractTypes', $this->optionalFields)){
                 if ($currentSpan->attributes()->itemprop[0] == "Working Pattern") {
                     array_push($job['contractTypes'], (string) $currentSpan);
                 }
             }
 
-            if(in_array('desc', $optionalFields)){
+            if(in_array('desc', $this->optionalFields)){
                 if ($currentSpan->attributes()->itemprop[0] == "Job description Additional Information") {
                     $job['desc'] = (string) $currentSpan->asXML();
                 }
             }
 
-            if(in_array('additionalInfo', $optionalFields)){
+            if(in_array('additionalInfo', $this->optionalFields)){
                 if ($currentSpan->attributes()->itemprop[0] == "Additional Information") {
                     $job['additionalInfo'] = (string) $currentSpan->asXML();
                 }
@@ -244,13 +310,13 @@ class OleeoFeedParser {
         return $job;
     }
 
-    function validateOptionalFieldsbyNewLine($job, $jobContent, array $optionalFields = []){
+    function validateOptionalFieldsbyNewLine($job, $jobContent){
     
-        if(in_array('cities', $optionalFields)){
+        if(in_array('cities', $this->optionalFields)){
             $job['cities'] = [];
         }
 
-        if(in_array('roleTypes', $optionalFields)){
+        if(in_array('roleTypes', $this->optionalFields)){
             $job['roleTypes'] = [];
         }
 
@@ -265,19 +331,19 @@ class OleeoFeedParser {
             if($fieldNameEndPos != false){
                 $fieldName = substr($field, 0,  $fieldNameEndPos);
 
-                if (in_array('id', $optionalFields)){
+                if (in_array('id', $this->optionalFields)){
                     if($fieldName == 'Vacancy Id'){
                         $job['id'] = substr($field,  $fieldNameEndPos+1);
                     }
                 }
 
-                if (in_array('closingDate', $optionalFields)){
+                if (in_array('closingDate', $this->optionalFields)){
                     if($fieldName == 'Closing Date'){
                         $job['closingDate'] = preg_replace("/[^0-9]/", "", strtotime(substr($field,  $fieldNameEndPos+1)));
                     }
                 }
 
-                if (in_array('salary', $optionalFields)){
+                if (in_array('salary', $this->optionalFields)){
                     if($fieldName == 'Salary'){
                         $salary_validated = $this->validateSalary(substr($field, $fieldNameEndPos+1));
                 
@@ -295,13 +361,13 @@ class OleeoFeedParser {
                     }
                 }
 
-                if (in_array('cities', $optionalFields)){
+                if (in_array('cities', $this->optionalFields)){
                     if($fieldName == 'Location'){
                         $job['cities'] = explode(",", substr($field,  $fieldNameEndPos+1));
                     }
                 }
 
-                if (in_array('roleTypes', $optionalFields)){
+                if (in_array('roleTypes', $this->optionalFields)){
                     if($fieldName == 'Role Type'){
                         $job['roleTypes'] = explode(",", substr($field,  $fieldNameEndPos+1));
                     }
