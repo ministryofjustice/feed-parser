@@ -95,40 +95,23 @@ foreach ($feeds as $feed) {
 
     $jsonFile = "output/$feedID.json";
 
-    $result = $feed_parser->parseToJSON("output/$xmlName", $jsonFile, $optionalFields, $feed['type'], $filters);
+    $parseResult = $feed_parser->parseToJSON("output/$xmlName", $jsonFile, $optionalFields, $feed['type'], $filters);
 
-    if (!$result['success']) {
-        return;
+    if (!$parseResult['success']) {
+        continue;
     }
 
-    // AWS S3 Object Key
-    $s3ObjectKey = $s3BucketPath . "$feedID.json";
+    $uploadResult = uploadFiletoS3($s3Client, $s3BucketName, $s3BucketPath . "$feedID.json", $jsonFile);
 
-    $result = [];
-
-    // Upload to AWS s3 bucket
-    try {
-        // Upload the file to S3 bucket
-        $result = $s3Client->putObject([
-            'Bucket' => $s3BucketName,
-            'Key' => $s3ObjectKey,
-            'ACL' => 'public-read',
-            'SourceFile' => '/' . $jsonFile
-        ]);
-
-        $uploadedFileName = basename('/' . $jsonFile);
-        echo "File '$uploadedFileName' uploaded to S3 successfully." . PHP_EOL;
-
-    } catch (AwsException $e) {
-        echo 'Error: ' . $e->getMessage() . PHP_EOL;
+    if (!$uploadResult['success'] || empty($uploadResult['fileURL'])) {
+        continue;
     }
 
-    if(!empty($result) && array_key_exists('effectiveUri', $result['@metadata'])){
-        $availableFeeds[] = [
-            'name' => $feed['name'],
-            'url' => $result['@metadata']['effectiveUri']
-        ];
-    }
+    $availableFeeds[] = [
+        'name' => $feed['name'],
+        'url' => $uploadResult['fileURL']
+    ];
+    
 }
 
 //Create Available Feeds JSON File
@@ -150,8 +133,12 @@ $result = uploadFiletoS3($s3Client, $s3BucketName, $s3BucketPath . "feeds.json",
 function uploadFiletoS3($s3Client, $s3BucketName, $s3ObjectKey, $sourceFile)
 {
 
-    $uploadResult = false;
+    $uploadResult = [
+        "success" => false, 
+        "fileURL" => false
+    ];
 
+    $result = [];
      // Upload to AWS s3 bucket
     try {
         // Upload the file to S3 bucket
@@ -162,12 +149,17 @@ function uploadFiletoS3($s3Client, $s3BucketName, $s3ObjectKey, $sourceFile)
            'SourceFile' => '/' . $sourceFile
         ]);
 
-        $uploadResult = true;
+        $uploadResult['success'] = true;
 
         $uploadedFileName = basename('/' . $sourceFile);
         echo "File '$uploadedFileName' uploaded to S3 successfully." . PHP_EOL;
     } catch (AwsException $e) {
         echo 'Error: ' . $e->getMessage() . PHP_EOL;
+    }
+
+    if(!empty($result) && array_key_exists('effectiveUri', $result['@metadata'])){
+        
+        $uploadResult['fileURL'] = $result['@metadata']['effectiveUri'];      
     }
 
     return $uploadResult;

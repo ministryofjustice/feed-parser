@@ -163,6 +163,8 @@ class OleeoFeedParser {
             $newTitle = preg_replace("/^" . $job['id'] . "\s*[-]/", "", htmlentities(html_entity_decode($job['title'])));
             $newTitle = preg_replace("/^" . $job['id'] . "\s*&ndash;/", "", $newTitle);
         
+            //further title cleaning that uses ':' - eg. prison officer campaign numbers, hmpps jobs
+            $newTitle = preg_replace("/^(\d+|C|SSF|SSO)\s*:/", "", trim($newTitle));
 
             if(!empty($newTitle)){
                $job['title'] = html_entity_decode(trim($newTitle));
