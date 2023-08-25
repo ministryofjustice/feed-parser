@@ -364,17 +364,45 @@ class OleeoFeedParser {
             }
         }
 
+        $artificial_role_types = [
+            "Prison Catering",
+            "Case Administrator",
+            "Community Payback",
+            "Youth Justice Worker"
+        ];
+
+        foreach ($artificial_role_types as $job_type) {
+            if(str_contains($job['title'], $job_type)) {
+                array_push($job['roleTypes'], (string) $job_type);
+                continue;
+            }
+        }
+
         return $job;
     }
 
     function validateOptionalFieldsbyNewLine($job, $jobContent){
-    
+
+        $artificial_role_types = [
+            "Prison Catering",
+            "Case Administrator",
+            "Community Payback",
+            "Youth Justice Worker"
+        ];
+
         if(in_array('cities', $this->optionalFields)){
             $job['cities'] = [];
         }
 
         if(in_array('roleTypes', $this->optionalFields)){
             $job['roleTypes'] = [];
+        }
+
+        foreach ($artificial_role_types as $job_type) {
+            if(str_contains($job['title'], $job_type)) {
+                array_push($job['roleTypes'], (string) $job_type);
+                continue;
+            }
         }
 
         $fields = (string) $jobContent->div;
