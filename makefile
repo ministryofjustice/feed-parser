@@ -6,3 +6,6 @@ run:
 
 down:
 	docker compose down
+
+log:
+	docker logs feedparser-local
