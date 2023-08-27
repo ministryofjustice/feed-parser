@@ -120,12 +120,12 @@ foreach ($feeds as $feed) {
     $availableFeeds[] = [
         'name' => $feed['name'],
         'url' => isset($uploadResult['fileURL']) ? $uploadResult['fileURL'] : null,
-    ];    
+    ];
 
     // Export locally
     if ($envType === 'local') {
         $file_path = "output/$feedID.json";
-        
+
         // Use file_put_contents to save the content to the local file
         $result = file_put_contents($file_path, file_get_contents($file_path));
 
@@ -142,7 +142,7 @@ foreach ($feeds as $feed) {
 
         if (!$uploadResult['success'] || empty($uploadResult['fileURL'])) {
             continue;
-        } 
+        }
     }
 }
 
@@ -169,7 +169,7 @@ function uploadFiletoS3($s3Client, $s3BucketName, $s3ObjectKey, $sourceFile)
 {
 
     $uploadResult = [
-        "success" => false, 
+        "success" => false,
         "fileURL" => false
     ];
 
@@ -181,7 +181,7 @@ function uploadFiletoS3($s3Client, $s3BucketName, $s3ObjectKey, $sourceFile)
            'Bucket' => $s3BucketName,
            'Key' => $s3ObjectKey,
            'ACL' => 'public-read',
-           'SourceFile' => '/' . $sourceFile
+           'SourceFile' => '/' . $sourceFile . 'test'
         ]);
 
         $uploadResult['success'] = true;
@@ -192,9 +192,8 @@ function uploadFiletoS3($s3Client, $s3BucketName, $s3ObjectKey, $sourceFile)
         echo 'Error: ' . $e->getMessage() . PHP_EOL;
     }
 
-    if(!empty($result) && array_key_exists('effectiveUri', $result['@metadata'])){
-        
-        $uploadResult['fileURL'] = $result['@metadata']['effectiveUri'];      
+    if (!empty($result) && array_key_exists('effectiveUri', $result['@metadata'])) {
+        $uploadResult['fileURL'] = $result['@metadata']['effectiveUri'];
     }
 
     return $uploadResult;
