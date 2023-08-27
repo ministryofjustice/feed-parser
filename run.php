@@ -41,26 +41,26 @@ $feeds = [
     ],
  ];
 
-if (count($feeds) == 0) {
-    return;
-}
+// if (count($feeds) == 0) {
+//     return;
+// }
 
-$availableFeeds = [];
+// $availableFeeds = [];
 
- // AWS S3 Bucket Name
-$s3BucketName = getenv('S3_UPLOADS_BUCKET');
+//  // AWS S3 Bucket Name
+// $s3BucketName = getenv('S3_UPLOADS_BUCKET');
 
-// AWS S3 Bucket Path
-$s3BucketPath = 'feed-parser/';  // Set to an empty string if the root of the bucket
+// // AWS S3 Bucket Path
+// $s3BucketPath = 'feed-parser/';  // Set to an empty string if the root of the bucket
 
-// AWS S3 Region
-$awsRegion = 'eu-west-2';
+// // AWS S3 Region
+// $awsRegion = 'eu-west-2';
 
-// Create an S3Client with the AWS credentials automatically provided by IAM instance profile
-$s3Client = new S3Client([
-    'region' => $awsRegion,
-    'version' => 'latest'
-]);
+// // Create an S3Client with the AWS credentials automatically provided by IAM instance profile
+// $s3Client = new S3Client([
+//     'region' => $awsRegion,
+//     'version' => 'latest'
+// ]);
 
 
 foreach ($feeds as $feed) {
@@ -89,7 +89,7 @@ foreach ($feeds as $feed) {
 
     $filters = [];
 
-    if(array_key_exists('filters', $feed) && !empty($feed['filters'])){
+    if (array_key_exists('filters', $feed) && !empty($feed['filters'])) {
         $filters = $feed['filters'];
     }
 
@@ -101,17 +101,21 @@ foreach ($feeds as $feed) {
         continue;
     }
 
-    $uploadResult = uploadFiletoS3($s3Client, $s3BucketName, $s3BucketPath . "$feedID.json", $jsonFile);
+    #$uploadResult = uploadFiletoS3($s3Client, $s3BucketName, $s3BucketPath . "$feedID.json", $jsonFile);
 
-    if (!$uploadResult['success'] || empty($uploadResult['fileURL'])) {
-        continue;
-    }
+    $file_path = "output/$feedID.json";
+
+    // Use file_put_contents to save the content to the local file
+    $result = file_put_contents($file_path, $jsonFile);
+
+    // if (!$uploadResult['success'] || empty($uploadResult['fileURL'])) {
+    //     continue;
+    // }
 
     $availableFeeds[] = [
         'name' => $feed['name'],
-        'url' => $uploadResult['fileURL']
+        // 'url' => $uploadResult['fileURL']
     ];
-    
 }
 
 //Create Available Feeds JSON File
@@ -128,39 +132,40 @@ if ($writeFileResult === false) {
     return;
 }
 
-$result = uploadFiletoS3($s3Client, $s3BucketName, $s3BucketPath . "feeds.json", "output/feeds.json");
+#$result = uploadFiletoS3($s3Client, $s3BucketName, $s3BucketPath . "feeds.json", "output/feeds.json");
 
-function uploadFiletoS3($s3Client, $s3BucketName, $s3ObjectKey, $sourceFile)
-{
+// function uploadFiletoS3($s3Client, $s3BucketName, $s3ObjectKey, $sourceFile)
+// {
 
-    $uploadResult = [
-        "success" => false, 
-        "fileURL" => false
-    ];
+//     return;
 
-    $result = [];
-     // Upload to AWS s3 bucket
-    try {
-        // Upload the file to S3 bucket
-        $result = $s3Client->putObject([
-           'Bucket' => $s3BucketName,
-           'Key' => $s3ObjectKey,
-           'ACL' => 'public-read',
-           'SourceFile' => '/' . $sourceFile
-        ]);
+//     $uploadResult = [
+//         "success" => false,
+//         "fileURL" => false
+//     ];
 
-        $uploadResult['success'] = true;
+//     $result = [];
+//      // Upload to AWS s3 bucket
+//     try {
+//         // Upload the file to S3 bucket
+//         $result = $s3Client->putObject([
+//            'Bucket' => $s3BucketName,
+//            'Key' => $s3ObjectKey,
+//            'ACL' => 'public-read',
+//            'SourceFile' => '/' . $sourceFile
+//         ]) 
 
-        $uploadedFileName = basename('/' . $sourceFile);
-        echo "File '$uploadedFileName' uploaded to S3 successfully." . PHP_EOL;
-    } catch (AwsException $e) {
-        echo 'Error: ' . $e->getMessage() . PHP_EOL;
-    }
+//         $uploadResult['success'] = true;
 
-    if(!empty($result) && array_key_exists('effectiveUri', $result['@metadata'])){
-        
-        $uploadResult['fileURL'] = $result['@metadata']['effectiveUri'];      
-    }
+//         $uploadedFileName = basename('/' . $sourceFile);
+//         echo "File '$uploadedFileName' uploaded to S3 successfully." . PHP_EOL;
+//     } catch (AwsException $e) {
+//         echo 'Error: ' . $e->getMessage() . PHP_EOL;
+//     }
 
-    return $uploadResult;
-}
+//     if (!empty($result) && array_key_exists('effectiveUri', $result['@metadata'])) {
+//         $uploadResult['fileURL'] = $result['@metadata']['effectiveUri'];
+//     }
+
+//     return $uploadResult;
+// }

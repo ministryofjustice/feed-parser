@@ -1,5 +1,6 @@
 .git/
 .github/
+output/
 .DS_Store
 .gitignore
 LICENSE
