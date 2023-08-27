@@ -181,7 +181,7 @@ function uploadFiletoS3($s3Client, $s3BucketName, $s3ObjectKey, $sourceFile)
            'Bucket' => $s3BucketName,
            'Key' => $s3ObjectKey,
            'ACL' => 'public-read',
-           'SourceFile' => '/' . $sourceFile . 'test'
+           'SourceFile' => '/' . $sourceFile
         ]);
 
         $uploadResult['success'] = true;
