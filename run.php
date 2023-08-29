@@ -12,6 +12,8 @@ $envType = getenv('ENV_TYPE');
 
 if ($envType === 'local') {
     echo 'The environment type is local export files locally.';
+
+    $uploadResult = [];
 }
 
 if ($envType != 'local') {
@@ -73,8 +75,6 @@ if (count($feeds) == 0) {
 
 $availableFeeds = [];
 
-$uploadResult = [];
-
 foreach ($feeds as $feed) {
     $feedID = $feed['id'];
     $feedURL = $feed['url'];
@@ -117,11 +117,6 @@ foreach ($feeds as $feed) {
         $uploadResult['fileURL'] = $jsonFile;
     }
 
-    $availableFeeds[] = [
-        'name' => $feed['name'],
-        'url' => $uploadResult['fileURL']
-    ];
-
     // Export locally
     if ($envType === 'local') {
         $file_path = "output/$feedID.json";
@@ -144,6 +139,11 @@ foreach ($feeds as $feed) {
             continue;
         }
     }
+
+    $availableFeeds[] = [
+        'name' => $feed['name'],
+        'url' => $uploadResult['fileURL']
+    ];
 }
 
 //Create Available Feeds JSON File
