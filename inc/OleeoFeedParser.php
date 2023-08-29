@@ -387,7 +387,8 @@ class OleeoFeedParser {
             "Prison Catering",
             "Case Administrator",
             "Community Payback",
-            "Youth Justice Worker"
+            "Youth Justice Worker",
+            "Probation Services Officer"
         ];
 
         if(in_array('cities', $this->optionalFields)){
