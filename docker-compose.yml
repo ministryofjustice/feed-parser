@@ -1,0 +1,10 @@
+version: '3'
+services:
+  feedparser-local:
+    image: feedparser-local
+    volumes:
+      - ./output:/output
+    container_name: feedparser-local
+    environment:
+      - ENV_TYPE=local
+    command: []

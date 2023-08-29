@@ -1,12 +1,12 @@
 ```
-  ______            _   _____                         
- |  ____|          | | |  __ \                        
- | |__ ___  ___  __| | | |__) |_ _ _ __ ___  ___ _ __ 
+  ______            _   _____
+ |  ____|          | | |  __ \
+ | |__ ___  ___  __| | | |__) |_ _ _ __ ___  ___ _ __
  |  __/ _ \/ _ \/ _` | |  ___/ _` | '__/ __|/ _ \ '__|
- | | |  __/  __/ (_| | | |  | (_| | |  \__ \  __/ |   
- |_|  \___|\___|\__,_| |_|   \__,_|_|  |___/\___|_|   
+ | | |  __/  __/ (_| | | |  | (_| | |  \__ \  __/ |
+ |_|  \___|\___|\__,_| |_|   \__,_|_|  |___/\___|_|
 
-```                                                     
+```
 [![Feed Parser Deployment](https://github.com/ministryofjustice/feed-parser/actions/workflows/cd.yaml/badge.svg)](https://github.com/ministryofjustice/feed-parser/actions/workflows/cd.yaml)
 
 # FeedParser
@@ -24,3 +24,14 @@ To check if the image has been pushed into the ECR repo make sure in your termin
 ## Usage
 
 We are currently running this application in [kubernetes using a cron manifest file](https://github.com/ministryofjustice/hale-platform/blob/main/helm_deploy/wordpress/templates/cron-feedparser.yaml) that periodically runs depending on the cron schedule.
+
+## Local development
+
+To run locally:
+
+1. In this repo root directory run `make build`.
+2. Run `make run`
+
+To stop run `make down` .
+
+Files will be exported to the `/output` folder rather then exported to s3.
