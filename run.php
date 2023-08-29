@@ -79,11 +79,13 @@ foreach ($feeds as $feed) {
     $feedID = $feed['id'];
     $feedURL = $feed['url'];
     $xmlName = "$feedID.xml";
-    $xmlLocation = "/output/$xmlName";
+    $xmlFile = "output/$xmlName";
+    $jsonFile = "output/$feedID.json";
 
     // Fetch the XML feed using wget
-    exec("wget -O  $xmlLocation $feedURL");
+    exec("wget -O  $xmlFile $feedURL");
 
+    // Get parser
     $feed_parser = new OleeoFeedParser();
 
     $optionalFields = [
@@ -105,9 +107,7 @@ foreach ($feeds as $feed) {
         $filters = $feed['filters'];
     }
 
-    $jsonFile = "output/$feedID.json";
-
-    $parseResult = $feed_parser->parseToJSON("output/$xmlName", $jsonFile, $optionalFields, $feed['type'], $filters);
+    $parseResult = $feed_parser->parseToJSON($xmlFile, $jsonFile, $optionalFields, $feed['type'], $filters);
 
     if (!$parseResult['success']) {
         continue;
@@ -119,7 +119,7 @@ foreach ($feeds as $feed) {
 
     $availableFeeds[] = [
         'name' => $feed['name'],
-        'url' => isset($uploadResult['fileURL']) ? $uploadResult['fileURL'] : null,
+        'url' => $uploadResult['fileURL']
     ];
 
     // Export locally
@@ -136,8 +136,8 @@ foreach ($feeds as $feed) {
         }
     }
 
+    // Export to s3
     if ($envType !== 'local') {
-        // Export to s3
         $uploadResult = uploadFiletoS3($s3Client, $s3BucketName, $s3BucketPath . "$feedID.json", $jsonFile);
 
         if (!$uploadResult['success'] || empty($uploadResult['fileURL'])) {
@@ -150,13 +150,13 @@ foreach ($feeds as $feed) {
 $feedsJSON = json_encode($availableFeeds);
 
 if (!$feedsJSON) {
-    exit;
+    return;
 }
 
 $writeFileResult = file_put_contents("output/feeds.json", $feedsJSON);
 
 if ($writeFileResult === false) {
-    exit;
+    return;
 }
 
 if ($envType == 'local') {
