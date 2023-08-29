@@ -13,7 +13,7 @@
 FeedParser is a PHP application designed to run as a microservice in a kubernetes cluster. It fetches structured job feeds from various URLs, parse them into JSON format, and upload the resulting JSON files to an Amazon S3 bucket where the file can be hosted as a URL. Our WordPress plugin called feed-importer can then use this JSON URL feed to populate the data into WordPress.
 
 ## Required
-- IAM instance profile setup if running on a k8s pod
+- Access to the k8s namespace you want to run the parser in
 
 ## Update this image
 
