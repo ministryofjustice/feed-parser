@@ -34,6 +34,10 @@ tagged `latest` will be the one used.
 
 We are currently running this application in [kubernetes using a cron manifest file](https://github.com/ministryofjustice/hale-platform/blob/main/helm_deploy/wordpress/templates/cron-feedparser.yaml) that periodically runs depending on the cron schedule.
 
+Everytime it runs, it will produce a JSON file(s) for each feed it is parsing,
+plus a tracker JSON called `feeds.json`, and upload these to the namespace's s3
+bucket in a folder called `/feed-parser`.
+
 ## Local development
 
 To run locally:
