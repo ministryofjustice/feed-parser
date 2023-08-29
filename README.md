@@ -19,7 +19,16 @@ FeedParser is a PHP application designed to run as a microservice in a kubernete
 
 Make required changes and merge into main. Merging or pushing to the `main` branch triggers a GitAction that pushes an image of the FeedParser to all `Hale Platform` environment namespaces, `prod`, `staging`, `dev` and `demo`. It has it's own ECR repository in each namespace called `jotw-content-devs/hale-platform-dev-feed-parser-ecr`.
 
-To check if the image has been pushed into the ECR repo make sure in your terminal you are set to use the right profile `export AWS_PROFILE=hale-platform-dev-s3` and then run `aws ecr list-images --repository-name jotw-content-devs/hale-platform-dev-feed-parser-ecr`.
+To check if the image has been pushed into the ECR repo first shell into the
+service module. First make sure your terminal is in the right namespace. If it
+is not, run `worm switch <env>`. Then run `kubectrl get all` and look for the
+service pod. The name should look something like
+`pod/cloud-platform-d2fcc98e23c3e68c-service-pod-58488bb5d7-w22sw`. Once found
+copy the whole name and run `kubectrl exec -it
+pod/cloud-platform-d2fcc98e23c3e68c-service-pod-58488bb5d7-w22sw -- bin/sh`
+(swap your pod name in). Then you can run `aws ecr list-images
+--repository-name jotw-content-devs/hale-platform-dev-feed-parser-ecr`. The one
+tagged `latest` will be the one used.
 
 ## Usage
 
