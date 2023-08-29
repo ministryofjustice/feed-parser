@@ -372,7 +372,7 @@ class OleeoFeedParser {
         ];
 
         foreach ($artificial_role_types as $job_type) {
-            if(str_contains($job['title'], $job_type)) {
+            if(strpos("x".$job['title'], $job_type)) {
                 array_push($job['roleTypes'], (string) $job_type);
                 continue;
             }
@@ -399,7 +399,9 @@ class OleeoFeedParser {
         }
 
         foreach ($artificial_role_types as $job_type) {
-            if(str_contains($job['title'], $job_type)) {
+            if(strpos("x".$job['title'], $job_type)) {
+                // strpos returns false if the "needle" is at position zero in the "haystack",
+                // so we add a character to the beginning to ensure that's not going to happen.
                 array_push($job['roleTypes'], (string) $job_type);
                 continue;
             }
