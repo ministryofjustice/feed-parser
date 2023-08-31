@@ -1,7 +1,15 @@
 <?php
 
+
 class OleeoFeedParser {
 
+    private $artificial_role_types = [
+        "Prison Catering",
+        "Case Administrator",
+        "Community Payback",
+        "Youth Justice Worker",
+        "Probation Service Officer"
+    ];
     private $feedType = 'complex';
     private $filters = [];
     private $optionalFields = [];
@@ -364,14 +372,7 @@ class OleeoFeedParser {
             }
         }
 
-        $artificial_role_types = [
-            "Prison Catering",
-            "Case Administrator",
-            "Community Payback",
-            "Youth Justice Worker"
-        ];
-
-        foreach ($artificial_role_types as $job_type) {
+        foreach ($this->artificial_role_types as $job_type) {
             if(strpos("x".$job['title'], $job_type)) {
                 array_push($job['roleTypes'], (string) $job_type);
                 continue;
@@ -383,14 +384,6 @@ class OleeoFeedParser {
 
     function validateOptionalFieldsbyNewLine($job, $jobContent){
 
-        $artificial_role_types = [
-            "Prison Catering",
-            "Case Administrator",
-            "Community Payback",
-            "Youth Justice Worker",
-            "Probation Services Officer"
-        ];
-
         if(in_array('cities', $this->optionalFields)){
             $job['cities'] = [];
         }
@@ -399,7 +392,7 @@ class OleeoFeedParser {
             $job['roleTypes'] = [];
         }
 
-        foreach ($artificial_role_types as $job_type) {
+        foreach ($this->artificial_role_types as $job_type) {
             if(strpos("x".$job['title'], $job_type)) {
                 // strpos returns false if the "needle" is at position zero in the "haystack",
                 // so we add a character to the beginning to ensure that's not going to happen.
