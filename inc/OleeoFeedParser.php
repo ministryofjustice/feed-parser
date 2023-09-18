@@ -8,8 +8,19 @@ class OleeoFeedParser {
         "Case Administrator",
         "Community Payback",
         "Youth Justice Worker",
-        "Probation Service Officer"
+        "Probation Services Officer"
     ];
+    private $job_title_entry_typos = [
+        // List of common data entry errors and their corrections (Job title only)
+        ["Probation Service Officer","Probation Services Officer"]
+    ];
+    function fixJobTitleTypos($title) {
+        $typos = $this->job_title_entry_typos;
+        foreach ($typos as $typo) {
+            $title = str_replace($typo[0],$typo[1],$title);
+        }
+        return $title;
+    }
     private $feedType = 'complex';
     private $filters = [];
     private $optionalFields = [];
@@ -372,6 +383,8 @@ class OleeoFeedParser {
             }
         }
 
+        $job['title'] = $this->fixJobTitleTypos($job['title']);
+
         foreach ($this->artificial_role_types as $job_type) {
             if(strpos("x".$job['title'], $job_type)) {
                 array_push($job['roleTypes'], (string) $job_type);
@@ -391,6 +404,8 @@ class OleeoFeedParser {
         if(in_array('roleTypes', $this->optionalFields)){
             $job['roleTypes'] = [];
         }
+
+        $job['title'] = $this->fixJobTitleTypos($job['title']);
 
         foreach ($this->artificial_role_types as $job_type) {
             if(strpos("x".$job['title'], $job_type)) {
