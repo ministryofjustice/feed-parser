@@ -10,17 +10,7 @@ class OleeoFeedParser {
         "Youth Justice Worker",
         "Probation Services Officer"
     ];
-    private $job_title_entry_typos = [
-        // List of common data entry errors and their corrections (Job title only)
-        ["Probation Service Officer","Probation Services Officer"]
-    ];
-    function fixJobTitleTypos($title) {
-        $typos = $this->job_title_entry_typos;
-        foreach ($typos as $typo) {
-            $title = str_replace($typo[0],$typo[1],$title);
-        }
-        return $title;
-    }
+
     private $feedType = 'complex';
     private $filters = [];
     private $optionalFields = [];
@@ -121,6 +111,19 @@ class OleeoFeedParser {
             'type' => 'array'
         ]
     ];
+
+    /**
+    * Replaces certain phrases in the job title
+    */
+    public function fixJobTitleTypos($title) {
+        $typos = [
+            ["Probation Service Officer","Probation Services Officer"]
+        ];
+        foreach ($typos as $typo) {
+            $title = str_replace($typo[0],$typo[1],$title);
+        }
+        return $title;
+    }
 
     /** 
     * Converts XML File to JSON FIle
