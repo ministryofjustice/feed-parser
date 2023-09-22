@@ -57,12 +57,10 @@ $feeds = [
         'type' => 'complex',
         'filters' => [
             [
-                'fieldName' => 'organisation',
+                'fieldName' => 'businessGroup',
                 'acceptedValues' => [
-                    'HMPPS HQ',
-                    'HMPPS - National Probation Service',
-                    'HMPPS - Public Sector Prisons',
-                    'HMPPS - Youth Custody Estate'
+                    "Her Majesty's Prison and Probation Service",
+                    "His Majesty's Prison and Probation Service"
                 ]
             ]
         ]
@@ -94,6 +92,7 @@ foreach ($feeds as $feed) {
        'salary',
        'availablePositions',
        'organisation',
+       'businessGroup',
        'addresses',
        'cities',
        'regions',

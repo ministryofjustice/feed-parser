@@ -33,6 +33,11 @@ class OleeoFeedParser {
             'type' => 'organisation'
         ],
         [
+            'jsonKey' => 'businessGroup',
+            'propName' => 'Business Group',
+            'type' => 'string'
+        ],
+        [
             'jsonKey' => 'closingDate',
             'propName' => 'Closing Date',
             'type' => 'date'
