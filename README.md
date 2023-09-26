@@ -10,7 +10,9 @@
 [![Feed Parser Deployment](https://github.com/ministryofjustice/feed-parser/actions/workflows/cd.yaml/badge.svg)](https://github.com/ministryofjustice/feed-parser/actions/workflows/cd.yaml)
 
 # FeedParser
-FeedParser is a PHP application designed to run as a microservice in a kubernetes cluster. It fetches structured job feeds from various URLs, parse them into JSON format, and upload the resulting JSON files to an Amazon S3 bucket where the file can be hosted as a URL. Our WordPress plugin called feed-importer can then use this JSON URL feed to populate the data into WordPress.
+FeedParser is a PHP application designed to run as a microservice in a kubernetes cluster. It imports an XML feed(s) and parses them into JSON format, uploading the resulting JSON files into an Amazon S3 bucket, in a folder `/feed-parser` where the file(s) can be hosted as a URL. 
+
+The hosted s3 JSON file can then be used by WordPress, using a plugin called [Feed Importer](https://github.com/ministryofjustice/feed-importer). This plugin converts the JSON data into data used by the WordPress database.
 
 ![Feed Parser architectural overview](https://cloud-platform-e218f50a4812967ba1215eaecede923f.s3.amazonaws.com/uploads/2023/09/feed-parser-architecture-overview-1.png)
 
@@ -19,8 +21,9 @@ FeedParser is a PHP application designed to run as a microservice in a kubernete
 
 ## Update this image
 
-Make required changes and merge into main. Merging or pushing to the `main` branch triggers a GitAction that pushes an image of the FeedParser to all `Hale Platform` environment namespaces, `prod`, `staging`, `dev` and `demo`. It has it's own ECR repository in each namespace called `jotw-content-devs/hale-platform-dev-feed-parser-ecr`.
+Raise a PR to merge new code into the `main` branch. This triggers a GitAction that pushes an image of the FeedParser to all `Hale Platform` environment namespaces, `prod`, `staging`, `dev` and `demo`. Each environment has its own ECR repository, ie, `jotw-content-devs/hale-platform-dev-feed-parser-ecr`.
 
+### Troubleshooting - check new ECR image is in the repository
 To check if the image has been pushed into the ECR repo first shell into the
 service module. First make sure your terminal is in the right namespace. If it
 is not, run `worm switch <env>`. Then run `kubectrl get all` and look for the
