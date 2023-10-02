@@ -130,6 +130,33 @@ class OleeoFeedParser {
         return $title;
     }
 
+    /**
+    * Extracts prison name from address or title and returns official name (help in PrisonLocations.php)
+    */
+    public function getPrisonNames($title, $address) {
+        $address = implode(";",$address); //Convert array to string
+        $address = str_replace("  ", " ", $address); //Addresses seem to often have double spaces in them
+        $locations = getPrisonLocationData();
+        $list = [];
+        foreach ($locations as $location) {
+            $name = $location["name"];
+            if (strpos($title,$name) !== false) {
+                $list[] = $name;
+            } elseif (strripos($address,$name) !== false) {
+                $list[] = $name;
+            } else {
+                foreach ($location["name_variations"] as $alias) {
+                    if (strpos($title,$alias) !== false) {
+                        $list[] = $name;
+                    } elseif (strripos($address,$alias) !== false) {
+                        $list[] = $name;
+                    }
+                }
+            }
+        }
+        return array_unique($list);
+	}
+
     /** 
     * Converts XML File to JSON FIle
     * @param string $sourceFile Source XML File to be parsed
@@ -400,6 +427,14 @@ class OleeoFeedParser {
             }
         }
 
+        if (array_key_exists('addresses', $job)) {
+            $job_prison_names = $this->getPrisonNames($job['title'],$job['addresses']);
+            if (count($job_prison_names)) $job['prisonNames'] = $job_prison_names;
+        } else {
+            $job_prison_names = $this->getPrisonNames($job['title'],[]);
+            if (count($job_prison_names)) $job['prisonNames'] = $job_prison_names;
+        }
+
         return $job;
     }
 
@@ -423,6 +458,9 @@ class OleeoFeedParser {
                 continue;
             }
         }
+
+        $job_prison_names = $this->getPrisonNames($job['title'],[]);
+        if (count($job_prison_names)) $job['prisonNames'] = $job_prison_names;
 
         $fields = (string) $jobContent->div;
 
