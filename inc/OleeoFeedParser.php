@@ -430,6 +430,9 @@ class OleeoFeedParser {
         if (array_key_exists('addresses', $job)) {
             $job_prison_names = $this->getPrisonNames($job['title'],$job['addresses']);
             if (count($job_prison_names)) $job['prisonNames'] = $job_prison_names;
+        } else {
+            $job_prison_names = $this->getPrisonNames($job['title'],[]);
+            if (count($job_prison_names)) $job['prisonNames'] = $job_prison_names;
         }
 
         return $job;
@@ -456,10 +459,8 @@ class OleeoFeedParser {
             }
         }
 
-        if (array_key_exists('addresses', $job)) {
-            $job_prison_names = $this->getPrisonNames($job['title'],[]);
-            if (count($job_prison_names)) $job['prisonNames'] = $job_prison_names;
-        }
+        $job_prison_names = $this->getPrisonNames($job['title'],[]);
+        if (count($job_prison_names)) $job['prisonNames'] = $job_prison_names;
 
         $fields = (string) $jobContent->div;
 
