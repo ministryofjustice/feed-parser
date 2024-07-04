@@ -113,7 +113,7 @@ class AvatureFeedParser {
     * Converts Avature JSON Data to JSON File
     * @param string $jsonData JSON data to be parsed
     * @param string $outputFile JSON File that will be created
-    * @param array $optionalFields 
+    * @param array  $optionalFields 
     * @return array $parseResult 
     **/
     public function parse(object $jsonData, string $outputFile, array $optionalFields = [], $filters = []){
@@ -270,9 +270,29 @@ class AvatureFeedParser {
 
         $job = $this->validateOptionalFields($job, $jobData);
 
-        //TODO - Strip Vacancy ID from title
+        //Title fixes and functions
+
+        $job['title'] = $this->fixJobTitleTypos($job['title']);
+
+        //Strip Vacancy ID from title
+        $job['title'] = $this->tidyTitle($job['title']);
+
+        $job = $this->applyArtificialRoles($job);
         
         return $job;
+    }
+
+    function tidyTitle($title){
+
+        $newTitle = preg_replace("/^[0-9]+\s*[-]/", "", htmlentities(html_entity_decode($title)));
+
+        $newTitle = preg_replace("/^(\d+|C|SSF|SSO)\s*:/", "", trim($newTitle));
+
+        if(!empty($newTitle)){
+            $title= html_entity_decode(trim($newTitle));
+        }
+        
+        return $title;
     }
 
     function validateOptionalFields($job, $jobData){
@@ -308,7 +328,13 @@ class AvatureFeedParser {
                 
                 }
                 else if($optionalField['type'] == 'salary'){
-                    $job[$jsonKey] = preg_replace("/[^0-9]/", "", $fieldValue);
+
+                    if($fieldValue == "Unpaid"){
+                        $job[$jsonKey] = $fieldValue;
+                    }
+                    else {
+                        $job[$jsonKey] = preg_replace("/[^0-9]/", "", $fieldValue);
+                    }
                 }
                 else if($optionalField['type'] == 'organisation'){
                     $job[$jsonKey] = trim(str_replace('AGY -', '', $fieldValue));
@@ -323,33 +349,18 @@ class AvatureFeedParser {
 
         }
         
+        return $job;
+    }
 
-        /*
-        $job['title'] = $this->fixJobTitleTypos($job['title']);
+    function applyArtificialRoles($job){
 
         foreach ($this->artificial_role_types as $job_type) {
             if(strpos("x".$job['title'], $job_type)) {
                 array_push($job['roleTypes'], (string) $job_type);
                 continue;
             }
-        }*/
-
-        return $job;
-    }
-
-    function validateSalary($salary){
-
-        $salary_validated = [];
-
-        if($salary == "Unpaid"){
-            $salary_validated = [
-                'min' => 'Unpaid',
-                'max' => 'Unpaid',
-            ];
-
-            return $salary_validated;
         }
 
-      
+        return $job;
     }
 }
