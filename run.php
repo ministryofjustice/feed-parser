@@ -49,36 +49,19 @@ $feeds = [
         
     ],
     [
-        'id' => 'avature-mens-prison-test',
-        'name' => 'Avature Mens Prison Feed',
-        'url' => 'https://entitylistfeedmojsscl-justicejobs.integrations.avature.net/jobFeedRequest',
-        'userNameENV' => 'AVATURE_FEED_USERNAME',
-        'passENV' => 'AVATURE_FEED_PASSWORD',
-        'parser' => 'avature',
-        'filters' => [
-            [
-                'fieldName' => 'prisonTypes',
-                'acceptedValues' => [
-                    "Men"
-                ]
-            ]
-        ]
-        
-    ],
-   /* [
         'id' => 'moj-oleeo-structured',
         'name' => 'MOJ Oleeo Jobs Structured Feed',
         'url' => 'https://justicejobs.tal.net/vx/mobile-0/appcentre-1/brand-2/candidate/jobboard/vacancy/3/feed/structured',
         'type' => 'complex'
-    ],*/
-    /*
+    ],
+    
     [
         'id' => 'moj-oleeo-simple',
         'name' => 'MOJ Oleeo Jobs Simple Feed',
         'url' => 'https://justicejobs.tal.net/vx/mobile-0/appcentre-1/brand-2/candidate/jobboard/vacancy/3/feed',
         'type' => 'simple'
-    ],*/
-    /*
+    ],
+    
     [
         'id' => 'hmpps-filtered-oleeo',
         'name' => 'HMPPS Filtered Oleeo Jobs Structured Feed',
@@ -93,7 +76,7 @@ $feeds = [
                 ]
             ]
         ]
-    ],*/
+    ]
  ];
 
 if (count($feeds) == 0) {
