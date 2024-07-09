@@ -15,3 +15,5 @@ jobs:
         ecr-role: ${{ secrets.DEV_ECR_ROLE_TO_ASSUME }}
         ecr-region: ${{ vars.DEV_ECR_REGION }}
         ecr-repo: ${{ vars.DEV_ECR_REPOSITORY }}
+        avature-feed-username: ${{ secrets.AVATURE_FEED_USERNAME }}
+        avature-feed-password: ${{ secrets.AVATURE_FEED_PASSWORD }}

@@ -42,3 +42,5 @@ jobs:
           env:
             REGISTRY: ${{ steps.login-ecr.outputs.registry }}
             REPOSITORY: ${{ secrets.ecr-repo }}
+            AVATURE_FEED_USERNAME: ${{ secrets.avature-feed-username }}
+            AVATURE_FEED_PASSWORD: ${{ secrets.avature-feed-password }}
