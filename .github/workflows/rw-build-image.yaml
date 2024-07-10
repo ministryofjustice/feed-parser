@@ -28,7 +28,7 @@ jobs:
 
         # Assume role in Cloud Platform
         - name: Config Credentials
-          uses: aws-actions/configure-aws-credentials@v2
+          uses: aws-actions/configure-aws-credentials@v4
           with:
             role-to-assume: ${{ secrets.ecr-role }}
             aws-region: ${{ secrets.ecr-region }}
