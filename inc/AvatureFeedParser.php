@@ -121,6 +121,7 @@ class AvatureFeedParser {
         $parseResult = ['success' => false, 'errors' => [] ];
 
         if(!property_exists($jsonData, 'jobs') || !is_array($jsonData->jobs)) {
+            echo 'Jobs property not found';
             return $parseResult;
         }
 
@@ -160,15 +161,18 @@ class AvatureFeedParser {
         $outputJSON = json_encode($outputArray);
 
         if(!$outputJSON){
+             echo 'Error parsing - encoding';
             $parseResult['errors'][] = "Error Parsing Feed [sourceFile: $sourceFile] - Error encoding feed data";
         }
         
         $writeFileResult = file_put_contents($outputFile, $outputJSON);
 
         if($writeFileResult === false){
+               echo 'Error parsing - writing';
             $parseResult['errors'][] = "Error Parsing Feed [sourceFile: $sourceFile] - Output file failed to write [outputFile: $outputFile]";
         }
         else {
+            echo 'Success woohoo';
             $parseResult['success'] = true;
         }
         
