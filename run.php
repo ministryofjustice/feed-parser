@@ -3,6 +3,7 @@
 // Import AWS SDK for PHP (autoload the AWS SDK classes)
 require 'vendor/autoload.php';
 require 'inc/OleeoFeedParser.php';
+require 'inc/AvatureFeedParser.php';
 
 use Aws\S3\S3Client;
 use Aws\Exception\AwsException;
@@ -39,17 +40,28 @@ echo 'Feed Parser Started';
 
 $feeds = [
     [
+        'id' => 'avature-test',
+        'name' => 'Avature Test Feed',
+        'url' => 'https://entitylistfeedmojsscl-justicejobs.integrations.avature.net/jobFeedRequest',
+        'userNameENV' => 'AVATURE_FEED_USERNAME',
+        'passENV' => 'AVATURE_FEED_PASSWORD',
+        'parser' => 'avature'
+        
+    ],
+    [
         'id' => 'moj-oleeo-structured',
         'name' => 'MOJ Oleeo Jobs Structured Feed',
         'url' => 'https://justicejobs.tal.net/vx/mobile-0/appcentre-1/brand-2/candidate/jobboard/vacancy/3/feed/structured',
         'type' => 'complex'
     ],
+    
     [
         'id' => 'moj-oleeo-simple',
         'name' => 'MOJ Oleeo Jobs Simple Feed',
         'url' => 'https://justicejobs.tal.net/vx/mobile-0/appcentre-1/brand-2/candidate/jobboard/vacancy/3/feed',
         'type' => 'simple'
     ],
+    
     [
         'id' => 'hmpps-filtered-oleeo',
         'name' => 'HMPPS Filtered Oleeo Jobs Structured Feed',
@@ -64,10 +76,12 @@ $feeds = [
                 ]
             ]
         ]
-    ],
+    ]
  ];
 
 if (count($feeds) == 0) {
+    //echo "No feeds found";
+    error_log( "No feeds found" );
     exit;
 }
 
@@ -76,29 +90,8 @@ $availableFeeds = [];
 foreach ($feeds as $feed) {
     $feedID = $feed['id'];
     $feedURL = $feed['url'];
-    $xmlName = "$feedID.xml";
-    $xmlFile = "output/$xmlName";
     $jsonFile = "output/$feedID.json";
-
-    // Fetch the XML feed using wget
-    exec("wget -O  $xmlFile $feedURL");
-
-    // Get parser
-    $feed_parser = new OleeoFeedParser();
-
-    $optionalFields = [
-       'id',
-       'closingDate',
-       'salary',
-       'availablePositions',
-       'organisation',
-       'businessGroup',
-       'addresses',
-       'cities',
-       'regions',
-       'roleTypes',
-       'contractTypes'
-    ];
+    $parseResult = ["success" => false];
 
     $filters = [];
 
@@ -106,8 +99,75 @@ foreach ($feeds as $feed) {
         $filters = $feed['filters'];
     }
 
-    $parseResult = $feed_parser->parseToJSON($xmlFile, $jsonFile, $optionalFields, $feed['type'], $filters);
+    if($feed['parser'] == 'avature'){
 
+        $userName = getenv($feed['userNameENV']);
+        $password = getenv($feed['passENV']);
+
+        $curlResult = curlFeed($feedURL, $userName, $password);
+
+        if($curlResult == false){
+            continue;
+        }
+        
+        $feedJson = json_decode($curlResult);
+
+        if($feedJson == false){
+            continue;
+        }
+
+        $feedParser = new AvatureFeedParser();
+
+        $optionalFields = [
+            'id',
+            'closingDate',
+            'salaryMin',
+            'salaryMax',
+            'salaryLondonWeighting',
+            'availablePositions',
+            'organisation',
+            'businessGroup',
+            'addresses',
+            'cities',
+            'regions',
+            'roleTypes',
+            'contractTypes',
+            'prisonNames',
+            'prisonTypes',
+            'prisonCategory'
+        ];
+
+        $parseResult = $feedParser->parse($feedJson, $jsonFile, $optionalFields, $filters);
+
+    }
+    else {
+        $xmlName = "$feedID.xml";
+        $xmlFile = "output/$xmlName";
+
+
+        // Fetch the XML feed using wget
+        exec("wget -O  $xmlFile $feedURL");
+
+        // Get parser
+        $feed_parser = new OleeoFeedParser();
+
+        $optionalFields = [
+        'id',
+        'closingDate',
+        'salary',
+        'availablePositions',
+        'organisation',
+        'businessGroup',
+        'addresses',
+        'cities',
+        'regions',
+        'roleTypes',
+        'contractTypes'
+        ];
+
+        $parseResult = $feed_parser->parseToJSON($xmlFile, $jsonFile, $optionalFields, $feed['type'], $filters);
+
+    }
     if (!$parseResult['success']) {
         continue;
     }
@@ -117,7 +177,7 @@ foreach ($feeds as $feed) {
     }
 
     // Export locally
-    if ($envType === 'local') {
+   /* if ($envType === 'local') {
         $file_path = "output/$feedID.json";
 
         // Use file_put_contents to save the content to the local file
@@ -128,7 +188,7 @@ foreach ($feeds as $feed) {
         } else {
             echo "Error writing data to local file.";
         }
-    }
+    }*/
 
     // Export to s3
     if ($envType !== 'local') {
@@ -196,4 +256,22 @@ function uploadFiletoS3($s3Client, $s3BucketName, $s3ObjectKey, $sourceFile)
     }
 
     return $uploadResult;
+}
+
+function curlFeed($url, $userName, $password){
+
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL,$url);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER,1);
+    curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+
+    if(!empty($userName) && !empty($password)){
+
+        curl_setopt($ch, CURLOPT_USERPWD, "$userName:$password");
+    }
+
+    $result = curl_exec($ch);
+    curl_close($ch);  
+
+    return $result;
 }
