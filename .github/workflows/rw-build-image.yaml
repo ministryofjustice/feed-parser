@@ -24,7 +24,7 @@ jobs:
       steps:
         # Checkout GitHub repository
         - name: Checkout
-          uses: actions/checkout@v3
+          uses: actions/checkout@v4
 
         # Assume role in Cloud Platform
         - name: Config Credentials
@@ -35,7 +35,7 @@ jobs:
 
         # Login to container repository
         - name: Login to ECR
-          uses: aws-actions/amazon-ecr-login@v1
+          uses: aws-actions/amazon-ecr-login@v2
           id: login-ecr
           with:
             mask-password: true
