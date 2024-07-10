@@ -9,6 +9,10 @@ on:
         required: true
       ecr-repo:
         required: true
+      avature-feed-username:
+        required: true
+      avature-feed-password:
+        required: true
 
 jobs:
   buildImage:
