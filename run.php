@@ -52,14 +52,16 @@ $feeds = [
         'id' => 'moj-oleeo-structured',
         'name' => 'MOJ Oleeo Jobs Structured Feed',
         'url' => 'https://justicejobs.tal.net/vx/mobile-0/appcentre-1/brand-2/candidate/jobboard/vacancy/3/feed/structured',
-        'type' => 'complex'
+        'type' => 'complex',
+        'parser' => 'Oleeo'
     ],
     
     [
         'id' => 'moj-oleeo-simple',
         'name' => 'MOJ Oleeo Jobs Simple Feed',
         'url' => 'https://justicejobs.tal.net/vx/mobile-0/appcentre-1/brand-2/candidate/jobboard/vacancy/3/feed',
-        'type' => 'simple'
+        'type' => 'simple',
+        'parser' => 'Oleeo'
     ],
     
     [
@@ -67,6 +69,7 @@ $feeds = [
         'name' => 'HMPPS Filtered Oleeo Jobs Structured Feed',
         'url' => 'https://justicejobs.tal.net/vx/mobile-0/appcentre-1/brand-2/candidate/jobboard/vacancy/3/feed/structured',
         'type' => 'complex',
+        'parser' => 'Oleeo',
         'filters' => [
             [
                 'fieldName' => 'businessGroup',
@@ -98,7 +101,7 @@ foreach ($feeds as $feed) {
     if (array_key_exists('filters', $feed) && !empty($feed['filters'])) {
         $filters = $feed['filters'];
     }
-
+    echo $feedID . " - Starting"
     if($feed['parser'] == 'avature'){
 
         $userName = getenv($feed['userNameENV']);
@@ -107,12 +110,14 @@ foreach ($feeds as $feed) {
         $curlResult = curlFeed($feedURL, $userName, $password);
 
         if($curlResult == false){
+            echo $feedID . " - Curl Failed"
             continue;
         }
         
         $feedJson = json_decode($curlResult);
 
         if($feedJson == false){
+            echo $feedID . " - JSON Decode Failed"
             continue;
         }
 
@@ -169,6 +174,7 @@ foreach ($feeds as $feed) {
 
     }
     if (!$parseResult['success']) {
+        echo $feedID . " - Parse Failed"
         continue;
     }
 
