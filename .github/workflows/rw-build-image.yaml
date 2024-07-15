@@ -9,10 +9,6 @@ on:
         required: true
       ecr-repo:
         required: true
-      avature-feed-username:
-        required: true
-      avature-feed-password:
-        required: true
 
 jobs:
   buildImage:
@@ -46,5 +42,3 @@ jobs:
           env:
             REGISTRY: ${{ steps.login-ecr.outputs.registry }}
             REPOSITORY: ${{ secrets.ecr-repo }}
-            AVATURE_FEED_USERNAME: ${{ secrets.avature-feed-username }}
-            AVATURE_FEED_PASSWORD: ${{ secrets.avature-feed-password }}
