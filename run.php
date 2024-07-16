@@ -11,6 +11,9 @@ use Aws\Exception\AwsException;
 // Check environment
 $envType = getenv('ENV_TYPE');
 
+//Set Timezone so dates are correct
+date_default_timezone_set('Europe/London');
+
 if ($envType === 'local') {
     echo 'The environment type is local export files locally.';
 
