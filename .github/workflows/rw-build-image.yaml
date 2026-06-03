@@ -20,18 +20,18 @@ jobs:
       steps:
         # Checkout GitHub repository
         - name: Checkout
-          uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+          uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
 
         # Assume role in Cloud Platform
         - name: Config Credentials
-          uses: aws-actions/configure-aws-credentials@ec61189d14ec14c8efccab744f656cffd0e33f37 # v6.1.0
+          uses: aws-actions/configure-aws-credentials@e7f100cf4c008499ea8adda475de1042d6975c7b # v6.2.0
           with:
             role-to-assume: ${{ secrets.ecr-role }}
             aws-region: ${{ secrets.ecr-region }}
 
         # Login to container repository
         - name: Login to ECR
-          uses: aws-actions/amazon-ecr-login@f2e9fc6c2b355c1890b65e6f6f0e2ac3e6e22f78 # v2.1.2
+          uses: aws-actions/amazon-ecr-login@fa648b43de3d4d023bcb3f89ed6940096949c419 # v2.1.5
           id: login-ecr
           with:
             mask-password: true
